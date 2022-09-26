@@ -41,7 +41,7 @@ workflows:
         inputs:
         - content: |-
             rm -rf ~/Library/Developer/Xcode/DerivedData/
-    - path::../bitrise-step-restore-cache:
+    - restore-cache:
         run_if: "true"
         is_skippable: false
         inputs:
