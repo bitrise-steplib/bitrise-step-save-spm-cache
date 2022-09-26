@@ -2,51 +2,14 @@ title: Save SPM Cache (Beta)
 summary: Saves Swift Pacakge Manager dependency cache. This Step needs to be used in combination with **Restore SPM Cache**.
 description: |
   Saves Swift Pacakge Manager dependency cache. This Step needs to be used in combination with **Restore SPM Cache**.
-
-  #### About key-based caching
-
-  Key-based caching is a concept where cache archives are saved and restored using a unique cache key. One Bitrise project can have multiple cache archives stored simultaneously, and the **Restore Cache Step** downloads a cache archive associated with the key provided as a Step input. The **Save Cache** Step is responsible for uploading the cache archive with an exact key.
-
-  Caches can become outdated across builds when something changes in the project (for example, a dependency gets upgraded to a new version). In this case, a new (unique) cache key is needed to save the new cache contents. This is possible if the cache key is dynamic and changes based on the project state (for example, a checksum of the dependency lockfile is part of the cache key). If you use the same dynamic cache key when restoring the cache, the Step will download the most relevant cache archive available.
-
-  Key-based caching is platform-agnostic and can be used to cache anything by carefully selecting the cache key and the files/folders to include in the cache.
-
-  #### Templates
-
-  The Step requires a string key to use when uploading a cache archive. In order to always download the most relevant cache archive for each build, the cache key input can contain template elements. The **Restore cache Step** evaluates the key template at runtime and the final key value can change based on the build environment or files in the repo. Similarly, the **Save cache** Step also uses templates to compute a unique cache key when uploading a cache archive.
-
-  The following variables are supported in the **Cache key** input:
-
-  - `cache-key-{{ .Branch }}`: Current git branch the build runs on
-  - `cache-key-{{ .CommitHash }}`: SHA-256 hash of the git commit the build runs on
-  - `cache-key-{{ .Workflow }}`: Current Bitrise workflow name (eg. `primary`)
-  - `{{ .Arch }}-cache-key`: Current CPU architecture (`amd64` or `arm64`)
-  - `{{ .OS }}-cache-key`: Current operating system (`linux` or `darwin`)
-
-  Functions available in a template:
-
-  `checksum`: This function takes one or more file paths and computes the SHA256 [checksum](https://en.wikipedia.org/wiki/Checksum) of the file contents. This is useful for creating unique cache keys based on files that describe content to cache.
-
-  Examples of using `checksum`:
-  - `cache-key-{{ checksum "package-lock.json" }}`
-  - `cache-key-{{ checksum "**/Package.resolved" }}`
-  - `cache-key-{{ checksum "**/*.gradle*" "gradle.properties" }}`
-
-  `getenv`: This function returns the value of an environment variable or an empty string if the variable is not defined.
-
-  Examples of `getenv`:
-  - `cache-key-{{ getenv "PR" }}`
-  - `cache-key-{{ getenv "BITRISEIO_PIPELINE_ID" }}`
-
-  #### Key matching
-
-  The most straightforward use case is when both the **Save cache** and **Restore cache** Steps use the same exact key to transfer cache between builds. Stored cache archives are scoped to the Bitrise project. Builds can restore caches saved by any previous Workflow run on any Bitrise Stack.
-
-  Unlike this Step, the **Restore cache** Step can define multiple keys as fallbacks when there is no match for the first cache key. See the docs of the **Restore cache** Step for more details.
+  
+  This Step is based on [key-based caching](https://devcenter.bitrise.io/en/builds/caching/key-based-caching.html) and sets up the cache key and path automatically for SPM dependencies. If you'd like to change the cache key (or paths to cache), you might want to use the generic [Save cache](https://github.com/bitrise-steplib/bitrise-step-save-cache) Step instead.
 
   #### Related steps
 
-  [Restore cache](https://github.com/bitrise-steplib/bitrise-step-restore-cache/)
+  [Restore SPM cache](https://github.com/bitrise-steplib/bitrise-step-restore-spm-cache/)
+  
+  [Save cache](https://github.com/bitrise-steplib/bitrise-step-save-cache/)
 
 website: https://github.com/bitrise-steplib/bitrise-step-save-spm-cache
 source_code_url: https://github.com/bitrise-steplib/bitrise-step-save-spm-cache
