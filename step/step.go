@@ -17,9 +17,10 @@ const (
 	// OS + Arch: SPM works on Linux too, and Intel/ARM difference is important on macOS
 	// checksum: Package.resolved is the dependency lockfile, either in the project root (pure Swift project)
 	// or at project.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
-	key = `{{ .OS }}-{{ .Arch }}-spm-cache-debug-{{ checksum "**/Package.resolved" }}`
+	key = `{{ .OS }}-{{ .Arch }}-spm-cache-{{ checksum "**/Package.resolved" }}`
 
 	// Cached path
+	// This folder contains the cloned git repos of packages
 	// The wildcard is for the unique project folder, such as `sample-swiftpm2-czkemcvuprosyehacrtonyiofjkk`
 	path = "~/Library/Developer/Xcode/DerivedData/**/SourcePackages"
 )
