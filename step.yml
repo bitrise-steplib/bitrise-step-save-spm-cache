@@ -1,7 +1,7 @@
 title: Save SPM Cache (Beta)
-summary: Saves build cache using a cache key. This Step needs to be used in combination with **Restore Cache**.
+summary: Saves Swift Pacakge Manager dependency cache. This Step needs to be used in combination with **Restore SPM Cache**.
 description: |
-  Saves build cache using a cache key. This Step needs to be used in combination with **Restore Cache**.
+  Saves Swift Pacakge Manager dependency cache. This Step needs to be used in combination with **Restore SPM Cache**.
 
   #### About key-based caching
 
@@ -52,6 +52,12 @@ website: https://github.com/bitrise-steplib/bitrise-step-save-spm-cache
 source_code_url: https://github.com/bitrise-steplib/bitrise-step-save-spm-cache
 support_url: https://github.com/bitrise-steplib/bitrise-step-save-spm-cache/issues
 
+project_type_tags:
+- ios
+- cordova
+- ionic
+- react-native
+- flutter
 type_tags:
 - utility
 
@@ -64,8 +70,6 @@ toolkit:
 
 deps:
   brew:
-  - name: zstd
-  apt_get:
   - name: zstd
 
 inputs:
