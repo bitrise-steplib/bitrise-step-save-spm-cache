@@ -48,11 +48,6 @@ workflows:
         - key: "{{ .OS }}-{{ .Arch }}-spm-cache-debug-"
         - verbose: "true"
     - script:
-        title: Check if restored folder is empty
-        inputs:
-        - content: |-
-            set -ex
-    - script:
         title: Resolve dependencies again
         inputs:
         - content: |-
