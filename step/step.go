@@ -63,6 +63,10 @@ func (step SaveCacheStep) Run() error {
 	}
 	stepconf.Print(input)
 	step.logger.Println()
+	step.logger.Printf("Cache key: %s", key)
+	step.logger.Printf("Cache paths:")
+	step.logger.Printf(path)
+	step.logger.Println()
 
 	step.logger.EnableDebugLog(input.Verbose)
 
