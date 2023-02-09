@@ -1,13 +1,13 @@
-# Save SPM Cache (Beta)
+# Save SPM Cache
 
 [![Step changelog](https://shields.io/github/v/release/bitrise-steplib/bitrise-step-save-spm-cache?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-steplib/bitrise-step-save-spm-cache/releases)
 
-Saves Swift Pacakge Manager dependency cache. This Step needs to be used in combination with **Restore SPM Cache**.
+Saves Swift Package Manager dependency cache. This Step needs to be used in combination with **Restore SPM Cache**.
 
 <details>
 <summary>Description</summary>
 
-Saves Swift Pacakge Manager dependency cache. This Step needs to be used in combination with **Restore SPM Cache**.
+Saves Swift Package Manager dependency cache. This Step needs to be used in combination with **Restore SPM Cache**.
 
 This Step is based on [key-based caching](https://devcenter.bitrise.io/en/builds/caching/key-based-caching.html) and sets up the cache key and path automatically for SPM dependencies. If you'd like to change the cache key (or paths to cache), you might want to use the generic [Save cache](https://github.com/bitrise-steplib/bitrise-step-save-cache) Step instead.
 
@@ -24,8 +24,6 @@ This Step is based on [key-based caching](https://devcenter.bitrise.io/en/builds
 Add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
 
 You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
-
-⚠️ **Beta status**: While this Step is in beta, everyone can use it without restrictions, quotas or costs.
 
 ### Examples
 

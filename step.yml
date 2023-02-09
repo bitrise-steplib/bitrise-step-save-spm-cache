@@ -1,4 +1,4 @@
-title: Save SPM Cache (Beta)
+title: Save SPM Cache
 summary: Saves Swift Package Manager dependency cache. This Step needs to be used in combination with **Restore SPM Cache**.
 description: |
   Saves Swift Package Manager dependency cache. This Step needs to be used in combination with **Restore SPM Cache**.
