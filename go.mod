@@ -1,10 +1,10 @@
-module github.com/bitrise-steplib/steps-save-spm-cache
+module github.com/bitrise-steplib/bitrise-step-save-spm-cache
 
 go 1.17
 
 require (
-	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.17
-	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.15
+	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.18
+	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.16
 )
 
 require (
