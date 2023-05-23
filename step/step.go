@@ -58,6 +58,7 @@ func (step SaveCacheStep) Run() error {
 	if err := step.inputParser.Parse(&input); err != nil {
 		return fmt.Errorf("failed to parse inputs: %w", err)
 	}
+	path := fmt.Sprintf("%s/SourcePackages", input.DerivedDataPath)
 	stepconf.Print(input)
 
 	path := filepath.Join(input.DerivedDataPath, "SourcePackages")
