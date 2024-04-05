@@ -2,6 +2,7 @@ package step
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/bitrise-io/go-steputils/v2/cache"
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
@@ -17,11 +18,11 @@ const (
 	// OS + Arch: SPM works on Linux too, and Intel/ARM difference is important on macOS
 	// checksum: Package.resolved is the dependency lockfile, either in the project root (pure Swift project)
 	// or at project.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
-	key = `{{ .OS }}-{{ .Arch }}-spm-cache-{{ checksum "**/Package.resolved" }}`	
+	key = `{{ .OS }}-{{ .Arch }}-spm-cache-{{ checksum "**/Package.resolved" }}`
 )
 
 type Input struct {
-	Verbose bool `env:"verbose,required"`
+	Verbose         bool   `env:"verbose,required"`
 	DerivedDataPath string `env:"derived_data_path,required"`
 }
 
@@ -57,8 +58,10 @@ func (step SaveCacheStep) Run() error {
 	if err := step.inputParser.Parse(&input); err != nil {
 		return fmt.Errorf("failed to parse inputs: %w", err)
 	}
-	path := fmt.Sprintf("%s/SourcePackages", input.DerivedDataPath)
 	stepconf.Print(input)
+
+	path := filepath.Join(input.DerivedDataPath, "SourcePackages")
+
 	step.logger.Println()
 	step.logger.Printf("Cache key: %s", key)
 	step.logger.Printf("Cache paths:")
