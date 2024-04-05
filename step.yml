@@ -44,7 +44,7 @@ inputs:
     value_options:
     - "true"
     - "false"
-- derived_data_path: "~/Library/Developer/Xcode/DerivedData/**"
+- derived_data_path: ~/Library/Developer/Xcode/DerivedData/**
   opts:
     title: Derived Data Path
     summary: Path of the project's Derived Data folder.
