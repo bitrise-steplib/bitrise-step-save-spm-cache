@@ -36,6 +36,12 @@ deps:
   - name: zstd
 
 inputs:
+- derived_data_path: ~/Library/Developer/Xcode/DerivedData/**
+  opts:
+    title: Derived Data Path
+    summary: Path of the project's Derived Data folder.
+    description: Path of the project's Derived Data folder. Supports glob patterns.
+    is_required: true
 - verbose: "false"
   opts:
     title: Verbose logging
@@ -44,9 +50,3 @@ inputs:
     value_options:
     - "true"
     - "false"
-- derived_data_path: ~/Library/Developer/Xcode/DerivedData/**
-  opts:
-    title: Derived Data Path
-    summary: Path of the project's Derived Data folder.
-    description: Path of the project's Derived Data folder. Supports glob patterns.
-    is_required: true

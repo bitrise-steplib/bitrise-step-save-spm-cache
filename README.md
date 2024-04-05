@@ -46,7 +46,7 @@ steps:
 | Key | Description | Flags | Default |
 | --- | --- | --- | --- |
 | `verbose` | Enable logging additional information for troubleshooting | required | `false` |
-| `derived_data_path` | Path of the project's derived data folder | required | `~/Library/Developer/Xcode/DerivedData/**` |
+| `derived_data_path` | Path of the project's Derived Data folder. Supports glob patterns. | required | `~/Library/Developer/Xcode/DerivedData/**` |
 </details>
 
 <details>
