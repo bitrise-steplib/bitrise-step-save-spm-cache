@@ -80,7 +80,7 @@ workflows:
         run_if: "true"
         is_skippable: false
         inputs:
-        - derived_data_path: # empty, so project_path will be used
+        - derived_data_path:  # empty, so project_path will be used
         - project_path: $BITRISE_PROJECT_PATH
         - verbose: "true"
     - script:
