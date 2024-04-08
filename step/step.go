@@ -29,6 +29,11 @@ type Input struct {
 	ProjectPath     string `env:"project_path"`
 }
 
+type Config struct {
+	CachePaths string
+	IsVerbose  bool
+}
+
 type SaveCacheStep struct {
 	logger                  log.Logger
 	inputParser             stepconf.InputParser
@@ -59,45 +64,55 @@ func New(
 	}
 }
 
-func (step SaveCacheStep) Run() error {
+func (step SaveCacheStep) ProcessConfig() (Config, error) {
 	var input Input
 	if err := step.inputParser.Parse(&input); err != nil {
-		return fmt.Errorf("failed to parse inputs: %w", err)
+		return Config{}, err
 	}
 	stepconf.Print(input)
+	step.logger.EnableDebugLog(input.Verbose)
 
 	input.DerivedDataPath = strings.TrimSpace(input.DerivedDataPath)
 	input.ProjectPath = strings.TrimSpace(input.ProjectPath)
 	if input.DerivedDataPath == "" && input.ProjectPath == "" {
-		return fmt.Errorf("failed to parse inputs: provide either Derived Data Path (derived_data_path) or Xcode Project Path (project_path) Inputs")
+		return Config{}, fmt.Errorf("provide either Derived Data Path (derived_data_path) or Xcode Project Path (project_path) Inputs")
 	}
 	if input.DerivedDataPath != "" && input.ProjectPath != "" {
 		step.logger.Warnf("Both Derived Data Path (derived_data_path) and Xcode Project Path (project_path) Inputs are provided, only derived_data_path is used, project_path is ignored")
 	}
 
-	path := filepath.Join(input.DerivedDataPath, "SourcePackages")
+	sourcePackagesPath := filepath.Join(input.DerivedDataPath, "SourcePackages")
 	if input.ProjectPath != "" {
 		var err error
+		if input.ProjectPath, err = step.pathModifier.AbsPath(input.ProjectPath); err != nil {
+			return Config{}, fmt.Errorf("failed to expand absolute project path: %w", err)
+		}
 		// project specific path already contains SourcePacages ($HOME/Library/Developer/Xcode/DerivedData/[PER_PROJECT_DERIVED_DATA]/SourcePackages)
-		if path, err = step.derivedDataPathProvider.SwiftPackagesPath(input.ProjectPath); err != nil {
-			return fmt.Errorf("failed to get Derived Data Path: %w", err)
+		if sourcePackagesPath, err = step.derivedDataPathProvider.SwiftPackagesPath(input.ProjectPath); err != nil {
+			return Config{}, fmt.Errorf("failed to get Derived Data Path: %w", err)
 		}
 	}
+
+	return Config{
+		CachePaths: sourcePackagesPath,
+		IsVerbose:  input.Verbose,
+	}, nil
+}
+
+func (step SaveCacheStep) Run(config Config) error {
 
 	step.logger.Println()
 	step.logger.Printf("Cache key: %s", key)
 	step.logger.Printf("Cache paths:")
-	step.logger.Printf(path)
+	step.logger.Printf(config.CachePaths)
 	step.logger.Println()
-
-	step.logger.EnableDebugLog(input.Verbose)
 
 	saver := cache.NewSaver(step.envRepo, step.logger, step.pathProvider, step.pathModifier, step.pathChecker)
 	return saver.Save(cache.SaveCacheInput{
 		StepId:      stepId,
-		Verbose:     input.Verbose,
+		Verbose:     config.IsVerbose,
 		Key:         key,
-		Paths:       []string{path},
+		Paths:       []string{config.CachePaths},
 		IsKeyUnique: true,
 	})
 }
