@@ -100,7 +100,6 @@ func (step SaveCacheStep) ProcessConfig() (Config, error) {
 }
 
 func (step SaveCacheStep) Run(config Config) error {
-
 	step.logger.Println()
 	step.logger.Printf("Cache key: %s", key)
 	step.logger.Printf("Cache paths:")
@@ -108,6 +107,7 @@ func (step SaveCacheStep) Run(config Config) error {
 	step.logger.Println()
 
 	saver := cache.NewSaver(step.envRepo, step.logger, step.pathProvider, step.pathModifier, step.pathChecker)
+
 	return saver.Save(cache.SaveCacheInput{
 		StepId:      stepId,
 		Verbose:     config.IsVerbose,
