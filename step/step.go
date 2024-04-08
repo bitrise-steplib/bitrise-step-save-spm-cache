@@ -3,12 +3,14 @@ package step
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/bitrise-io/go-steputils/v2/cache"
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-io/go-utils/v2/pathutil"
+	xcodecache "github.com/bitrise-io/go-xcode/v2/xcodecache"
 )
 
 const (
@@ -23,16 +25,18 @@ const (
 
 type Input struct {
 	Verbose         bool   `env:"verbose,required"`
-	DerivedDataPath string `env:"derived_data_path,required"`
+	DerivedDataPath string `env:"derived_data_path"`
+	ProjectPath     string `env:"project_path"`
 }
 
 type SaveCacheStep struct {
-	logger       log.Logger
-	inputParser  stepconf.InputParser
-	pathChecker  pathutil.PathChecker
-	pathProvider pathutil.PathProvider
-	pathModifier pathutil.PathModifier
-	envRepo      env.Repository
+	logger                  log.Logger
+	inputParser             stepconf.InputParser
+	pathChecker             pathutil.PathChecker
+	pathProvider            pathutil.PathProvider
+	pathModifier            pathutil.PathModifier
+	envRepo                 env.Repository
+	derivedDataPathProvider xcodecache.SwiftPackageCache
 }
 
 func New(
@@ -42,14 +46,16 @@ func New(
 	pathProvider pathutil.PathProvider,
 	pathModifier pathutil.PathModifier,
 	envRepo env.Repository,
+	derivedDataPathProvider xcodecache.SwiftPackageCache,
 ) SaveCacheStep {
 	return SaveCacheStep{
-		logger:       logger,
-		inputParser:  inputParser,
-		pathChecker:  pathChecker,
-		pathProvider: pathProvider,
-		pathModifier: pathModifier,
-		envRepo:      envRepo,
+		logger:                  logger,
+		inputParser:             inputParser,
+		pathChecker:             pathChecker,
+		pathProvider:            pathProvider,
+		pathModifier:            pathModifier,
+		envRepo:                 envRepo,
+		derivedDataPathProvider: derivedDataPathProvider,
 	}
 }
 
@@ -60,7 +66,23 @@ func (step SaveCacheStep) Run() error {
 	}
 	stepconf.Print(input)
 
+	input.DerivedDataPath = strings.TrimSpace(input.DerivedDataPath)
+	input.ProjectPath = strings.TrimSpace(input.ProjectPath)
+	if input.DerivedDataPath == "" && input.ProjectPath == "" {
+		return fmt.Errorf("failed to parse inputs: provide either Derived Data Path (derived_data_path) or Xcode Project Path (project_path) Inputs")
+	}
+	if input.DerivedDataPath != "" && input.ProjectPath != "" {
+		step.logger.Warnf("Both Derived Data Path (derived_data_path) and Xcode Project Path (project_path) Inputs are provided, only derived_data_path is used, project_path is ignored")
+	}
+
 	path := filepath.Join(input.DerivedDataPath, "SourcePackages")
+	if input.ProjectPath != "" {
+		var err error
+		// project specific path already contains SourcePacages ($HOME/Library/Developer/Xcode/DerivedData/[PER_PROJECT_DERIVED_DATA]/SourcePackages)
+		if path, err = step.derivedDataPathProvider.SwiftPackagesPath(input.ProjectPath); err != nil {
+			return fmt.Errorf("failed to get Derived Data Path: %w", err)
+		}
+	}
 
 	step.logger.Println()
 	step.logger.Printf("Cache key: %s", key)
