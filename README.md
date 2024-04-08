@@ -45,7 +45,7 @@ steps:
 
 | Key | Description | Flags | Default |
 | --- | --- | --- | --- |
-| `derived_data_path` | Path of the project's Derived Data folder. Supports glob patterns. | required | `~/Library/Developer/Xcode/DerivedData/**` |
+| `derived_data_path` | Path of the project's Derived Data folder. Supports glob patterns. |  | `~/Library/Developer/Xcode/DerivedData/**` |
 | `project_path` | Xcode Project (`.xcodeproj`) or Workspace (`.xcworkspace`) path.  If this is a Swift package, this should be the path to the `Package.swift` file. |  | `$BITRISE_PROJECT_PATH` |
 | `verbose` | Enable logging additional information for troubleshooting | required | `false` |
 </details>

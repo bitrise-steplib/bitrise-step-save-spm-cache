@@ -41,10 +41,10 @@ inputs:
     title: Derived Data Path
     summary: Path of the project's Derived Data folder.
     description: Path of the project's Derived Data folder. Supports glob patterns.
-    is_required: true    
+    is_required: false
 - project_path: $BITRISE_PROJECT_PATH
   opts:
-    title: Xcode Project path. Used to automatically find Derived Data path, only when `Derived Data Path` is empty (not provided). 
+    title: Xcode Project path. Used to automatically find Derived Data path, only when `Derived Data Path` is empty (not provided).
     summary: Path of the Xcode Project (`.xcodeproj`), Workspace (`.xcworkspace`) or Swift package (`Package.swift`)
     description: |-
       Xcode Project (`.xcodeproj`) or Workspace (`.xcworkspace`) path.
