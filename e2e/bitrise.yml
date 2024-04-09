@@ -57,7 +57,7 @@ workflows:
   test_spm_project_specific_path:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-swiftpm.git
-    - BITRISE_PROJECT_PATH: sample-swiftpm4/sample-swiftpm2.xcodeproj
+    - BITRISE_PROJECT_PATH: sample-swiftpm2.xcodeproj
     - BRANCH: master
     before_run:
     - _generate_api_token
@@ -66,7 +66,7 @@ workflows:
     - change-workdir:
         title: Switch working dir to _tmp
         inputs:
-        - path: ./_tmp
+        - path: ./_tmp/sample-swiftpm4
         - is_create_path: true
     - script:
         title: Clean DerivedData
