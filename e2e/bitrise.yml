@@ -8,7 +8,7 @@ app:
   - CACHE_API_CLIENT_SECRET: $CACHE_API_CLIENT_SECRET
 
 workflows:
-  test_spm:
+  test_spm_default:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-swiftpm.git
     - BRANCH: master
@@ -35,6 +35,56 @@ workflows:
         run_if: "true"
         is_skippable: false
         inputs:
+        - verbose: "true"
+    - script:
+        title: Clean DerivedData
+        inputs:
+        - content: |-
+            rm -rf ~/Library/Developer/Xcode/DerivedData/
+    - restore-cache:
+        run_if: "true"
+        is_skippable: false
+        inputs:
+        - key: "{{ .OS }}-{{ .Arch }}-spm-cache-"
+        - verbose: "true"
+    - script:
+        title: Resolve dependencies again
+        inputs:
+        - content: |-
+            set -ex
+            xcodebuild -resolvePackageDependencies
+
+  test_spm_project_specific_path:
+    envs:
+    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-swiftpm.git
+    - BITRISE_PROJECT_PATH: sample-swiftpm2.xcodeproj
+    - BRANCH: master
+    before_run:
+    - _generate_api_token
+    - _setup
+    steps:
+    - change-workdir:
+        title: Switch working dir to _tmp
+        inputs:
+        - path: ./_tmp/sample-swiftpm4
+        - is_create_path: true
+    - script:
+        title: Clean DerivedData
+        inputs:
+        - content: rm -rf ~/Library/Developer/Xcode/DerivedData/
+    - script:
+        title: Resolve dependencies
+        inputs:
+        - content: |-
+            set -ex
+            xcodebuild -resolvePackageDependencies
+    - path::./:
+        title: Execute step
+        run_if: "true"
+        is_skippable: false
+        inputs:
+        - derived_data_path:  # empty, so project_path will be used
+        - project_path: $BITRISE_PROJECT_PATH
         - verbose: "true"
     - script:
         title: Clean DerivedData
