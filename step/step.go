@@ -2,6 +2,7 @@ package step
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/bitrise-io/go-steputils/v2/cache"
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
@@ -18,15 +19,11 @@ const (
 	// checksum: Package.resolved is the dependency lockfile, either in the project root (pure Swift project)
 	// or at project.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 	key = `{{ .OS }}-{{ .Arch }}-spm-cache-{{ checksum "**/Package.resolved" }}`
-
-	// Cached path
-	// This folder contains the cloned git repos of packages
-	// The wildcard is for the unique project folder, such as `sample-swiftpm2-czkemcvuprosyehacrtonyiofjkk`
-	path = "~/Library/Developer/Xcode/DerivedData/**/SourcePackages"
 )
 
 type Input struct {
-	Verbose bool `env:"verbose,required"`
+	Verbose         bool   `env:"verbose,required"`
+	DerivedDataPath string `env:"derived_data_path,required"`
 }
 
 type SaveCacheStep struct {
@@ -62,6 +59,9 @@ func (step SaveCacheStep) Run() error {
 		return fmt.Errorf("failed to parse inputs: %w", err)
 	}
 	stepconf.Print(input)
+
+	path := filepath.Join(input.DerivedDataPath, "SourcePackages")
+
 	step.logger.Println()
 	step.logger.Printf("Cache key: %s", key)
 	step.logger.Printf("Cache paths:")
