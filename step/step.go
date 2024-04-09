@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	stepId = "save-spm-cache"
+	stepID = "save-spm-cache"
 
 	// Cache key template
 	// OS + Arch: SPM works on Linux too, and Intel/ARM difference is important on macOS
@@ -78,6 +78,7 @@ func (step SaveCacheStep) ProcessConfig() (Config, error) {
 		return Config{}, fmt.Errorf("provide either Derived Data Path (derived_data_path) or Xcode Project Path (project_path) Inputs")
 	}
 	if input.DerivedDataPath != "" && input.ProjectPath != "" {
+		input.ProjectPath = ""
 		step.logger.Warnf("Both Derived Data Path (derived_data_path) and Xcode Project Path (project_path) Inputs are provided, only derived_data_path is used, project_path is ignored")
 	}
 
@@ -85,7 +86,7 @@ func (step SaveCacheStep) ProcessConfig() (Config, error) {
 	if input.ProjectPath != "" {
 		var err error
 		if input.ProjectPath, err = step.pathModifier.AbsPath(input.ProjectPath); err != nil {
-			return Config{}, fmt.Errorf("failed to expand absolute project path: %w", err)
+			return Config{}, fmt.Errorf("failed to expand project path: %w", err)
 		}
 		// project specific path already contains SourcePacages ($HOME/Library/Developer/Xcode/DerivedData/[PER_PROJECT_DERIVED_DATA]/SourcePackages)
 		if sourcePackagesPath, err = step.derivedDataPathProvider.SwiftPackagesPath(input.ProjectPath); err != nil {
@@ -109,7 +110,7 @@ func (step SaveCacheStep) Run(config Config) error {
 	saver := cache.NewSaver(step.envRepo, step.logger, step.pathProvider, step.pathModifier, step.pathChecker)
 
 	return saver.Save(cache.SaveCacheInput{
-		StepId:      stepId,
+		StepId:      stepID,
 		Verbose:     config.IsVerbose,
 		Key:         key,
 		Paths:       []string{config.CachePaths},
