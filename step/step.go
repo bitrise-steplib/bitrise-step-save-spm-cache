@@ -24,14 +24,16 @@ const (
 )
 
 type Input struct {
-	Verbose         bool   `env:"verbose,required"`
-	DerivedDataPath string `env:"derived_data_path"`
-	ProjectPath     string `env:"project_path"`
+	Verbose          bool   `env:"verbose,required"`
+	DerivedDataPath  string `env:"derived_data_path"`
+	ProjectPath      string `env:"project_path"`
+	CompressionLevel int    `env:"compression_level,range[1..19]"`
 }
 
 type Config struct {
-	CachePaths string
-	IsVerbose  bool
+	CachePaths       string
+	IsVerbose        bool
+	CompressionLevel int
 }
 
 type SaveCacheStep struct {
@@ -95,8 +97,9 @@ func (step SaveCacheStep) ProcessConfig() (Config, error) {
 	}
 
 	return Config{
-		CachePaths: sourcePackagesPath,
-		IsVerbose:  input.Verbose,
+		CachePaths:       sourcePackagesPath,
+		IsVerbose:        input.Verbose,
+		CompressionLevel: input.CompressionLevel,
 	}, nil
 }
 
@@ -110,10 +113,11 @@ func (step SaveCacheStep) Run(config Config) error {
 	saver := cache.NewSaver(step.envRepo, step.logger, step.pathProvider, step.pathModifier, step.pathChecker)
 
 	return saver.Save(cache.SaveCacheInput{
-		StepId:      stepID,
-		Verbose:     config.IsVerbose,
-		Key:         key,
-		Paths:       []string{config.CachePaths},
-		IsKeyUnique: true,
+		StepId:           stepID,
+		Verbose:          config.IsVerbose,
+		Key:              key,
+		Paths:            []string{config.CachePaths},
+		IsKeyUnique:      true,
+		CompressionLevel: config.CompressionLevel,
 	})
 }
