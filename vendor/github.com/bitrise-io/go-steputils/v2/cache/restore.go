@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -21,9 +22,10 @@ import (
 // RestoreCacheInput is the information that comes from the cache steps that call this shared implementation
 type RestoreCacheInput struct {
 	// StepId identifies the exact cache step. Used for logging events.
-	StepId  string
-	Verbose bool
-	Keys    []string
+	StepId         string
+	Verbose        bool
+	Keys           []string
+	NumFullRetries int
 }
 
 // Restorer ...
@@ -36,6 +38,7 @@ type restoreCacheConfig struct {
 	Keys           []string
 	APIBaseURL     stepconf.Secret
 	APIAccessToken stepconf.Secret
+	NumFullRetries int
 }
 
 type restorer struct {
@@ -67,7 +70,7 @@ func (r *restorer) Restore(input RestoreCacheInput) error {
 	r.logger.Println()
 	r.logger.Infof("Downloading archive...")
 	downloadStartTime := time.Now()
-	result, err := r.download(config)
+	result, err := r.download(context.Background(), config)
 	if err != nil {
 		if errors.Is(err, network.ErrCacheNotFound) {
 			r.logger.Donef("No cache entry found for the provided key")
@@ -95,7 +98,12 @@ func (r *restorer) Restore(input RestoreCacheInput) error {
 	r.logger.Println()
 	r.logger.Infof("Restoring archive...")
 	extractionStartTime := time.Now()
-	if err := compression.Decompress(result.filePath, r.logger, r.envRepo); err != nil {
+	archiver := compression.NewArchiver(
+		r.logger,
+		r.envRepo,
+		compression.NewDependencyChecker(r.logger, r.envRepo))
+
+	if err := archiver.Decompress(result.filePath, ""); err != nil {
 		return fmt.Errorf("failed to decompress cache archive: %w", err)
 	}
 	extractionTime := time.Since(extractionStartTime).Round(time.Second)
@@ -131,6 +139,7 @@ func (r *restorer) createConfig(input RestoreCacheInput) (restoreCacheConfig, er
 		Keys:           keys,
 		APIBaseURL:     stepconf.Secret(apiBaseURL),
 		APIAccessToken: stepconf.Secret(apiAccessToken),
+		NumFullRetries: input.NumFullRetries,
 	}, nil
 }
 
@@ -156,7 +165,7 @@ func (r *restorer) evaluateKeys(keys []string) ([]string, error) {
 	return evaluatedKeys, nil
 }
 
-func (r *restorer) download(config restoreCacheConfig) (downloadResult, error) {
+func (r *restorer) download(ctx context.Context, config restoreCacheConfig) (downloadResult, error) {
 	dir, err := os.MkdirTemp("", "restore-cache")
 	if err != nil {
 		return downloadResult{}, err
@@ -165,12 +174,13 @@ func (r *restorer) download(config restoreCacheConfig) (downloadResult, error) {
 	downloadPath := filepath.Join(dir, name)
 
 	params := network.DownloadParams{
-		APIBaseURL:   string(config.APIBaseURL),
-		Token:        string(config.APIAccessToken),
-		CacheKeys:    config.Keys,
-		DownloadPath: downloadPath,
+		APIBaseURL:     string(config.APIBaseURL),
+		Token:          string(config.APIAccessToken),
+		CacheKeys:      config.Keys,
+		DownloadPath:   downloadPath,
+		NumFullRetries: config.NumFullRetries,
 	}
-	matchedKey, err := network.Download(params, r.logger)
+	matchedKey, err := network.Download(ctx, params, r.logger)
 	if err != nil {
 		return downloadResult{}, err
 	}
