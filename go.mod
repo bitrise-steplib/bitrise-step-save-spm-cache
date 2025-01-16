@@ -3,8 +3,8 @@ module github.com/bitrise-steplib/bitrise-step-save-spm-cache
 go 1.20
 
 require (
-	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.31
-	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.22
+	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.36
+	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.23
 	github.com/bitrise-io/go-xcode/v2 v2.0.0-alpha.44
 )
 
