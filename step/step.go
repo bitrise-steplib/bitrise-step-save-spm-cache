@@ -110,7 +110,7 @@ func (step SaveCacheStep) Run(config Config) error {
 	step.logger.Printf(config.CachePaths)
 	step.logger.Println()
 
-	saver := cache.NewSaver(step.envRepo, step.logger, step.pathProvider, step.pathModifier, step.pathChecker)
+	saver := cache.NewSaver(step.envRepo, step.logger, step.pathProvider, step.pathModifier, step.pathChecker, nil)
 
 	return saver.Save(cache.SaveCacheInput{
 		StepId:           stepID,
