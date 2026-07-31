@@ -23,8 +23,9 @@ const (
 	key = `{{ .OS }}-{{ .Arch }}-spm-cache-{{ checksum "**/Package.resolved" }}`
 
 	// Separate namespace: restore replays an archive to its recorded paths, so the relocated and
-	// default layouts must not collide.
-	xceleratedKey = `{{ .OS }}-{{ .Arch }}-spm-cache-xcelerate-{{ checksum "**/Package.resolved" }}`
+	// default layouts must not collide. The marker sits before "spm-cache" so this key is not
+	// matched by the default prefix fallback in restore-spm-cache.
+	xceleratedKey = `{{ .OS }}-{{ .Arch }}-xcelerate-spm-cache-{{ checksum "**/Package.resolved" }}`
 
 	// EnvSwiftPackagesPath is exported by `bitrise-build-cache activate xcode`.
 	EnvSwiftPackagesPath = "BITRISE_XCODE_SOURCE_PACKAGES_PATH"
