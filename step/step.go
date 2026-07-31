@@ -22,19 +22,15 @@ const (
 	// or at project.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 	key = `{{ .OS }}-{{ .Arch }}-spm-cache-{{ checksum "**/Package.resolved" }}`
 
-	// xceleratedKey is used when Build Cache for Xcode relocated the SPM checkouts. The archive then
-	// holds a different absolute path than the default-layout one, and restore replays archives to
-	// their recorded paths, so the two layouts must not share a key namespace.
+	// Separate namespace: restore replays an archive to its recorded paths, so the relocated and
+	// default layouts must not collide.
 	xceleratedKey = `{{ .OS }}-{{ .Arch }}-spm-cache-xcelerate-{{ checksum "**/Package.resolved" }}`
 
-	// EnvSwiftPackagesPath is exported by `bitrise-build-cache activate xcode`. When set, the
-	// xcodebuild wrapper passes it to xcodebuild as -clonedSourcePackagesDirPath, which moves SPM
-	// checkouts out of DerivedData and therefore out of this step's default path.
+	// EnvSwiftPackagesPath is exported by `bitrise-build-cache activate xcode`.
 	EnvSwiftPackagesPath = "BITRISE_XCODE_SOURCE_PACKAGES_PATH"
 
-	// defaultDerivedDataPath mirrors the derived_data_path default in step.yml. Bitrise materialises
-	// input defaults into the environment, so this is the only way to tell "user left it alone" from
-	// "user deliberately set this exact value" — the latter is rare and still honoured either way.
+	// Mirrors step.yml. Bitrise materialises input defaults into the env, so comparing against it
+	// is the only way to tell an untouched Input from a deliberate one.
 	defaultDerivedDataPath = "~/Library/Developer/Xcode/DerivedData/**"
 )
 
@@ -131,10 +127,8 @@ func (step SaveCacheStep) ProcessConfig() (Config, error) {
 }
 
 // xcelerateSourcePackagesPath returns the SPM checkout dir published by Build Cache for Xcode, or
-// empty when it is not in play. Build Cache for Xcode moves DerivedData under ~/.bitrise/cache, and
-// SPM checkouts follow it, so caching this step's default path would archive a directory the build
-// never reads — a silent no-op that leaves every build re-resolving packages from origin.
-// An explicitly overridden derived_data_path wins, so existing opted-in setups keep working.
+// empty when it is not in play or derived_data_path was set deliberately. Build Cache for Xcode
+// moves DerivedData, so caching the default path would archive a dir the build never reads.
 func (step SaveCacheStep) xcelerateSourcePackagesPath(derivedDataPath string) string {
 	relocated := strings.TrimSpace(step.envRepo.Get(EnvSwiftPackagesPath))
 	if relocated == "" {

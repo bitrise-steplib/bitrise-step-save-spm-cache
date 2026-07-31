@@ -67,8 +67,7 @@ func TestXcelerateSourcePackagesPath(t *testing.T) {
 	}
 }
 
-// The relocated and default layouts archive different absolute paths, and restore replays an archive
-// to its recorded paths, so sharing a key namespace would restore the wrong layout.
+// Sharing a namespace would let one layout restore over the other.
 func TestKeyNamespacesDiffer(t *testing.T) {
 	if key == xceleratedKey {
 		t.Fatalf("default and xcelerate cache keys must differ, both are %q", key)
