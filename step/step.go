@@ -23,12 +23,13 @@ const (
 	key = `{{ .OS }}-{{ .Arch }}-spm-cache-{{ checksum "**/Package.resolved" }}`
 
 	// Separate namespace: restore replays an archive to its recorded paths, so the relocated and
-	// default layouts must not collide. The marker sits before "spm-cache" so this key is not
-	// matched by the default prefix fallback in restore-spm-cache.
-	xceleratedKey = `{{ .OS }}-{{ .Arch }}-xcelerate-spm-cache-{{ checksum "**/Package.resolved" }}`
+	// default layouts must not collide. The marker sits after "spm-cache" so restore-spm-cache's
+	// existing prefix fallback still finds these archives without a matching change there.
+	xceleratedKey = `{{ .OS }}-{{ .Arch }}-spm-cache-xcelerate-{{ checksum "**/Package.resolved" }}`
 
-	// EnvSwiftPackagesPath is exported by `bitrise-build-cache activate xcode`.
-	EnvSwiftPackagesPath = "BITRISE_XCODE_SOURCE_PACKAGES_PATH"
+	// EnvDerivedDataPath is exported by `bitrise-build-cache activate xcode` with the root it
+	// relocates DerivedData under. Builds live at <root>/<workspace-sha>.
+	EnvDerivedDataPath = "BITRISE_XCODE_DERIVED_DATA_PATH"
 
 	// Mirrors step.yml. Bitrise materialises input defaults into the env, so comparing against it
 	// is the only way to tell an untouched Input from a deliberate one.
@@ -90,9 +91,9 @@ func (step SaveCacheStep) ProcessConfig() (Config, error) {
 	input.DerivedDataPath = strings.TrimSpace(input.DerivedDataPath)
 	input.ProjectPath = strings.TrimSpace(input.ProjectPath)
 
-	if relocated := step.xcelerateSourcePackagesPath(input.DerivedDataPath); relocated != "" {
+	if relocated := step.xcelerateDerivedDataPath(input.DerivedDataPath); relocated != "" {
 		return Config{
-			CachePaths:       relocated,
+			CachePaths:       filepath.Join(relocated, "SourcePackages"),
 			Key:              xceleratedKey,
 			IsVerbose:        input.Verbose,
 			CompressionLevel: input.CompressionLevel,
@@ -127,25 +128,25 @@ func (step SaveCacheStep) ProcessConfig() (Config, error) {
 	}, nil
 }
 
-// xcelerateSourcePackagesPath returns the SPM checkout dir published by Build Cache for Xcode, or
-// empty when it is not in play or derived_data_path was set deliberately. Build Cache for Xcode
-// moves DerivedData, so caching the default path would archive a dir the build never reads.
-func (step SaveCacheStep) xcelerateSourcePackagesPath(derivedDataPath string) string {
-	relocated := strings.TrimSpace(step.envRepo.Get(EnvSwiftPackagesPath))
-	if relocated == "" {
+// xcelerateDerivedDataPath returns a glob over the DerivedData dirs Build Cache for Xcode
+// relocates builds to, or empty when it is not in play or derived_data_path was set deliberately.
+// Caching the default path there would archive a dir the build never reads.
+func (step SaveCacheStep) xcelerateDerivedDataPath(derivedDataPath string) string {
+	root := strings.TrimSpace(step.envRepo.Get(EnvDerivedDataPath))
+	if root == "" {
 		return ""
 	}
 
 	if derivedDataPath != "" && derivedDataPath != defaultDerivedDataPath {
-		step.logger.Warnf("Build Cache for Xcode relocated the SPM checkouts to %s, but derived_data_path is set to %s.", relocated, derivedDataPath)
+		step.logger.Warnf("Build Cache for Xcode relocated DerivedData under %s, but derived_data_path is set to %s.", root, derivedDataPath)
 		step.logger.Warnf("Caching %s as requested — clear derived_data_path to cache the relocated checkouts instead.", derivedDataPath)
 
 		return ""
 	}
 
-	step.logger.Printf("Build Cache for Xcode is active, caching the relocated SPM checkouts (%s=%s)", EnvSwiftPackagesPath, relocated)
+	step.logger.Printf("Build Cache for Xcode is active, caching the relocated SPM checkouts under %s", root)
 
-	return relocated
+	return filepath.Join(root, "*")
 }
 
 func (step SaveCacheStep) Run(config Config) error {

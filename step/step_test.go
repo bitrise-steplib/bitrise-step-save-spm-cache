@@ -1,6 +1,7 @@
 package step
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/bitrise-io/go-utils/v2/env"
@@ -21,8 +22,8 @@ func newStepWithEnv(envs map[string]string) SaveCacheStep {
 	}
 }
 
-func TestXcelerateSourcePackagesPath(t *testing.T) {
-	const relocated = "/Users/vagrant/.bitrise/cache/xcode-spm"
+func TestXcelerateDerivedDataPath(t *testing.T) {
+	const root = "/Users/vagrant/.bitrise/cache/xcode-dd"
 
 	tests := []struct {
 		name            string
@@ -31,20 +32,20 @@ func TestXcelerateSourcePackagesPath(t *testing.T) {
 		want            string
 	}{
 		{
-			name:            "relocated path used when derived_data_path is the default",
-			envValue:        relocated,
+			name:            "relocated root used when derived_data_path is the default",
+			envValue:        root,
 			derivedDataPath: defaultDerivedDataPath,
-			want:            relocated,
+			want:            root + "/*",
 		},
 		{
-			name:            "relocated path used when derived_data_path is empty",
-			envValue:        relocated,
+			name:            "relocated root used when derived_data_path is empty",
+			envValue:        root,
 			derivedDataPath: "",
-			want:            relocated,
+			want:            root + "/*",
 		},
 		{
 			name:            "explicit derived_data_path override wins",
-			envValue:        relocated,
+			envValue:        root,
 			derivedDataPath: "/custom/dd",
 			want:            "",
 		},
@@ -58,17 +59,21 @@ func TestXcelerateSourcePackagesPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			step := newStepWithEnv(map[string]string{EnvSwiftPackagesPath: tt.envValue})
+			step := newStepWithEnv(map[string]string{EnvDerivedDataPath: tt.envValue})
 
-			if got := step.xcelerateSourcePackagesPath(tt.derivedDataPath); got != tt.want {
-				t.Errorf("xcelerateSourcePackagesPath(%q) = %q, want %q", tt.derivedDataPath, got, tt.want)
+			if got := step.xcelerateDerivedDataPath(tt.derivedDataPath); got != tt.want {
+				t.Errorf("xcelerateDerivedDataPath(%q) = %q, want %q", tt.derivedDataPath, got, tt.want)
 			}
 		})
 	}
 }
 
-// Sharing a namespace would let one layout restore over the other.
-func TestKeyNamespacesDiffer(t *testing.T) {
+// Sharing a namespace would let one layout restore over the other. The xcelerate key must still
+// sit under the default prefix, which is how the unchanged restore step finds it.
+func TestKeyNamespaces(t *testing.T) {
+	if !strings.HasPrefix(xceleratedKey, `{{ .OS }}-{{ .Arch }}-spm-cache-`) {
+		t.Errorf("xcelerate key %q must stay under the restore step's prefix fallback", xceleratedKey)
+	}
 	if key == xceleratedKey {
 		t.Fatalf("default and xcelerate cache keys must differ, both are %q", key)
 	}
