@@ -21,6 +21,19 @@ const (
 	// checksum: Package.resolved is the dependency lockfile, either in the project root (pure Swift project)
 	// or at project.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 	key = `{{ .OS }}-{{ .Arch }}-spm-cache-{{ checksum "**/Package.resolved" }}`
+
+	// Separate namespace: restore replays an archive to its recorded paths, so the relocated and
+	// default layouts must not collide. The marker sits after "spm-cache" so restore-spm-cache's
+	// existing prefix fallback still finds these archives without a matching change there.
+	xceleratedKey = `{{ .OS }}-{{ .Arch }}-spm-cache-xcelerate-{{ checksum "**/Package.resolved" }}`
+
+	// EnvDerivedDataPath is exported by `bitrise-build-cache activate xcode` with the root it
+	// relocates DerivedData under. Builds live at <root>/<workspace-sha>.
+	EnvDerivedDataPath = "BITRISE_XCODE_DERIVED_DATA_PATH"
+
+	// Mirrors step.yml. Bitrise materialises input defaults into the env, so comparing against it
+	// is the only way to tell an untouched Input from a deliberate one.
+	defaultDerivedDataPath = "~/Library/Developer/Xcode/DerivedData/**"
 )
 
 type Input struct {
@@ -32,6 +45,7 @@ type Input struct {
 
 type Config struct {
 	CachePaths       string
+	Key              string
 	IsVerbose        bool
 	CompressionLevel int
 }
@@ -76,6 +90,16 @@ func (step SaveCacheStep) ProcessConfig() (Config, error) {
 
 	input.DerivedDataPath = strings.TrimSpace(input.DerivedDataPath)
 	input.ProjectPath = strings.TrimSpace(input.ProjectPath)
+
+	if relocated := step.xcelerateDerivedDataPath(input.DerivedDataPath); relocated != "" {
+		return Config{
+			CachePaths:       filepath.Join(relocated, "SourcePackages"),
+			Key:              xceleratedKey,
+			IsVerbose:        input.Verbose,
+			CompressionLevel: input.CompressionLevel,
+		}, nil
+	}
+
 	if input.DerivedDataPath == "" && input.ProjectPath == "" {
 		return Config{}, fmt.Errorf("provide either Derived Data Path (derived_data_path) or Xcode Project Path (project_path) Inputs")
 	}
@@ -98,14 +122,36 @@ func (step SaveCacheStep) ProcessConfig() (Config, error) {
 
 	return Config{
 		CachePaths:       sourcePackagesPath,
+		Key:              key,
 		IsVerbose:        input.Verbose,
 		CompressionLevel: input.CompressionLevel,
 	}, nil
 }
 
+// xcelerateDerivedDataPath returns a glob over the DerivedData dirs Build Cache for Xcode
+// relocates builds to, or empty when it is not in play or derived_data_path was set deliberately.
+// Caching the default path there would archive a dir the build never reads.
+func (step SaveCacheStep) xcelerateDerivedDataPath(derivedDataPath string) string {
+	root := strings.TrimSpace(step.envRepo.Get(EnvDerivedDataPath))
+	if root == "" {
+		return ""
+	}
+
+	if derivedDataPath != "" && derivedDataPath != defaultDerivedDataPath {
+		step.logger.Warnf("Build Cache for Xcode relocated DerivedData under %s, but derived_data_path is set to %s.", root, derivedDataPath)
+		step.logger.Warnf("Caching %s as requested — clear derived_data_path to cache the relocated checkouts instead.", derivedDataPath)
+
+		return ""
+	}
+
+	step.logger.Printf("Build Cache for Xcode is active, caching the relocated SPM checkouts under %s", root)
+
+	return filepath.Join(root, "*")
+}
+
 func (step SaveCacheStep) Run(config Config) error {
 	step.logger.Println()
-	step.logger.Printf("Cache key: %s", key)
+	step.logger.Printf("Cache key: %s", config.Key)
 	step.logger.Printf("Cache paths:")
 	step.logger.Printf(config.CachePaths)
 	step.logger.Println()
@@ -115,7 +161,7 @@ func (step SaveCacheStep) Run(config Config) error {
 	return saver.Save(cache.SaveCacheInput{
 		StepId:           stepID,
 		Verbose:          config.IsVerbose,
-		Key:              key,
+		Key:              config.Key,
 		Paths:            []string{config.CachePaths},
 		IsKeyUnique:      true,
 		CompressionLevel: config.CompressionLevel,

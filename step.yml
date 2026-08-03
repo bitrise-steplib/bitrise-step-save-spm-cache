@@ -42,7 +42,13 @@ inputs:
   opts:
     title: Derived Data Path
     summary: Path of the project's Derived Data folder.
-    description: Path of the project's Derived Data folder. Supports glob patterns.
+    description: |-
+      Path of the project's Derived Data folder. Supports glob patterns.
+
+      Ignored when Build Cache for Xcode is active and this Input is left at its default: that
+      feature relocates Derived Data, and the Step caches the relocated location instead
+      (published as `BITRISE_XCODE_DERIVED_DATA_PATH`). Set this Input to something other than
+      the default to cache that path regardless.
     is_required: false
 - project_path: $BITRISE_PROJECT_PATH
   opts:
